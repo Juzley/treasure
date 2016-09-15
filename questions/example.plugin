@@ -1,0 +1,9 @@
+[Core]
+Name = Example Question Set
+Module = example
+
+[Documentation]
+Description = Example questions
+Author = Example author
+Version = 1.0
+Website = example.org
