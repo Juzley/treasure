@@ -11,7 +11,10 @@
 
     <h1>Events</h1>
     {%for e in events %}
-        <a href="create_team/{{e.id}}/@@@">{{e.questions}}</a>
+        {{e.questions}}:
+            <a href="create_team/{{e.id}}/@@@">Create Team</a>
+            <a href="start_event/{{e.id}}">Start Event</a>
+            <a href="end_event/{{e.id}}">End Event</a>
         <h2>Teams</h2>
         {%for t in e.teams %}
             <a href="join_team/{{e.id}}/{{t.name}}">{{t.name}}</a>

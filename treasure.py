@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 from flask_peewee.db import Database
 from flask_security import Security, PeeweeUserDatastore, UserMixin,           \
     RoleMixin, login_required, current_user
@@ -52,6 +52,7 @@ class UserRoles(db.Model):
 class Event(db.Model):
     questions = TextField()
     questions_version = TextField(null=True)
+    active = BooleanField(default=False)
 
 
 class EventAdmin(db.Model):
@@ -80,8 +81,9 @@ security = Security(app, user_datastore)
 def init_tables():
     for Model in (User, Role, UserRoles, Event, EventAdmin, Team, Participant):
         Model.create_table(fail_silently=True)
-    user_datastore.create_user(email='juzley@gmail.com',
-                               password=encrypt_password('password'))
+    if not User.select(User.email=='juzley@gmailcom').exists():
+        user_datastore.create_user(email='juzley@gmail.com',
+                                   password=encrypt_password('password'))
 
 
 ################################################################################
@@ -94,6 +96,14 @@ pluginManager.collectPlugins()
 
 
 ################################################################################
+# Helper functions
+################################################################################
+def is_event_admin(event, user):
+    return EventAdmin.select().where(EventAdmin.event==event,
+                                     EventAdmin.user==user.id).count() > 0
+
+
+################################################################################
 # Views
 ################################################################################
 @app.route('/register')
@@ -101,10 +111,38 @@ def register_user():
     return render_template('security/register_user.html')
 
 
-@app.route('/start_event/<event>')
-@login_required()
-def start_event('event'):
-    pass
+@app.route('/start_event/<event_id>')
+@login_required
+def start_event(event_id):
+    # TODO: Post rather than get?
+    # TODO: Check event exists
+    event = Event.get(Event.id==event_id)
+
+    # Don't start the event if it is already started, or if the current user
+    # isn't an admin.
+    if not event.active and is_event_admin(event, current_user):
+        print("Started")
+        event.active = True
+        event.save()
+
+    return redirect(url_for('home'))
+
+
+
+@app.route('/end_event/<event_id>')
+@login_required
+def end_event(event_id):
+    # TODO: Check event exists
+    event = Event.get(Event.id==event_id)
+
+    # Don't stop the event if it isn't started, or if the current user isn't
+    # an admin
+    if event.active and is_event_admin(event, current_user):
+        print("Stopped")
+        event.active = False
+        event.save()
+
+    return redirect(url_for('home'))
 
 @app.route('/create_event/<questions>')
 @login_required
@@ -118,7 +156,7 @@ def create_event(questions):
     event = Event.create(questions=questions)
     EventAdmin.create(event=event, user=current_user.id)
 
-    return home()
+    return redirect(url_for('home'))
 
 
 @app.route('/create_team/<event>/<name>')
@@ -129,7 +167,7 @@ def create_team(event, name):
     name = ''.join(random.choice(string.ascii_lowercase) for _ in range(4))
     Team.create(name=name, event=event)
 
-    return home()
+    return redirect(url_for('home'))
 
 
 @app.route('/join_team/<event>/<name>')
@@ -137,6 +175,7 @@ def create_team(event, name):
 def join_team(event, name):
     # TODO: Check team exists
     # Check if this user is already in a team for this event.
+    # TODO: don't think this works
     for p in Participant.select().join(Team).where(
             Team.event == event, Participant.user == current_user.id):
         p.delete()
@@ -144,12 +183,8 @@ def join_team(event, name):
     team = Team.get(Team.event == event, Team.name == name)
     p = Participant(user=current_user.id, team=team.id)
     p.save()
-    print(team.members)
-    for m in team.members:
-        print(m.user.email)
 
-
-    return home()
+    return redirect(url_for('home'))
 
 
 @app.route('/')
