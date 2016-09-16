@@ -66,6 +66,14 @@ class Team(db.Model):
     # TODO: key of name/event
 
 
+class Answer(db.Model):
+    team = ForeignKeyField(Team, related_name='answers')
+    question = IntegerField()
+    answer = TextField()
+    correct = BooleanField()
+    # TODO: key of team/question
+
+
 class Participant(db.Model):
     user = ForeignKeyField(User, related_name='events')
     team = ForeignKeyField(Team, related_name='members')
@@ -79,7 +87,8 @@ security = Security(app, user_datastore)
 # Create a test user
 @app.before_first_request
 def init_tables():
-    for Model in (User, Role, UserRoles, Event, EventAdmin, Team, Participant):
+    for Model in (User, Role, UserRoles, Event, EventAdmin, Team,
+                  Answer, Participant):
         Model.create_table(fail_silently=True)
     if not User.select(User.email=='juzley@gmailcom').exists():
         user_datastore.create_user(email='juzley@gmail.com',
@@ -103,12 +112,48 @@ def is_event_admin(event, user):
                                      EventAdmin.user==user.id).count() > 0
 
 
+def get_team(event, user):
+    # Use 'first' here - there should only be one result
+    return Team.select().join(Participant).where(Participant.user==user.id,
+                                                 Team.event==event).first()
+
+
 ################################################################################
 # Views
 ################################################################################
 @app.route('/register')
 def register_user():
     return render_template('security/register_user.html')
+
+
+@app.route('/event/<event_id>')
+@login_required
+def event(event_id):
+    # TODO: Check event exists, check login vs not etc
+    event = Event.get(Event.id==event_id)
+    # TODO: Check plugin exists
+    questions = pluginManager.getPluginByName(event.questions)
+
+    return questions.render()
+
+
+@app.route('/answer_question/<event_id>/<question>')
+def answer_question(event_id, question):
+    answer = flask.request.get_json()
+
+    # TODO: Check all this stuff exists
+    event = Event.get(Event.id==event_id)
+
+    # TODO: Error if event isn't active.
+    if event.active:
+        team = get_team(event, current_user)
+        questions = pluginManager.getPluginByName(event.questions)
+        correct = questions.check_answer(question, answer)
+
+        a = Answer.get_or_create(team=team, question=question)
+        a.answer = answer
+        a.correct = questions.check_answer(answer)
+        a.save()
 
 
 @app.route('/start_event/<event_id>')
@@ -121,7 +166,6 @@ def start_event(event_id):
     # Don't start the event if it is already started, or if the current user
     # isn't an admin.
     if not event.active and is_event_admin(event, current_user):
-        print("Started")
         event.active = True
         event.save()
 
@@ -138,7 +182,6 @@ def end_event(event_id):
     # Don't stop the event if it isn't started, or if the current user isn't
     # an admin
     if event.active and is_event_admin(event, current_user):
-        print("Stopped")
         event.active = False
         event.save()
 
