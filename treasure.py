@@ -3,10 +3,12 @@ from flask_peewee.db import Database
 from flask_security import Security, PeeweeUserDatastore, UserMixin,           \
     RoleMixin, login_required, current_user
 from flask_security.utils import encrypt_password
-from peewee import CharField, TextField, ForeignKeyField, BooleanField
+from peewee import CharField, TextField, ForeignKeyField, BooleanField,        \
+    IntegerField
 from yapsy.PluginManager import PluginManager
 import random
 import string
+import json
 
 
 app = Flask(__name__)
@@ -138,6 +140,7 @@ def event(event_id):
 
 
 @app.route('/answer_question/<event_id>/<question>')
+@login_required
 def answer_question(event_id, question):
     answer = flask.request.get_json()
 
@@ -154,6 +157,20 @@ def answer_question(event_id, question):
         a.answer = answer
         a.correct = questions.check_answer(answer)
         a.save()
+
+
+@app.route('/get_answers/<event_id>')
+@login_required
+def get_answers(event_id):
+    # TODO: Support getting answers for a particular team, for admins
+    # TODO: Check everything exists
+    event = Event.get(Event.id==event_id)
+
+    team = get_team(event, current_user)
+
+    answers = {a.question: a.answer for a in
+               Answer.select().where(Answer.team==team.id)}
+    return json.dumps(answer)
 
 
 @app.route('/start_event/<event_id>')

@@ -5,4 +5,58 @@
 </head>
 <body>
 
+<div class="question" id="1">
+Question 1: 
+<form><input type="text" class="answer"><input type="submit"></form>
+</div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+<script>
+    var Example = (function($) {
+        use strict;
+
+        eventId = {{ event_id }};
+
+        // TODO: Move some of these to common lib?
+        getAnswers = function(successCallback) {
+            $.ajax({
+                url: '/get_answers/' + eventId,
+                type: 'GET',
+                dataType: 'json',
+                success: successCallback
+            });
+        };
+
+        submitAnswer = function(question, answer, successCallback) {
+            $.ajax({
+                url: '/answer_question/' + eventId + "/" + question,
+                data: JSON.stringify(answer),
+                contentType: 'application/json; charset=utf-8',
+                success: successCallback
+            });
+        }
+
+        populateAnswers = function(answers) {
+            for (var question in answers) {
+                if (answers.hasOwnProperty(question)) {
+                    $('#' question '.question answer') .val(answers[question]);
+                }
+            }
+        };
+
+        (function init() {
+            // Fill in any answers we already have.
+            getAnswers(populateAnswers);
+
+            // Set up answer submission
+            $('#question :submit').each(function() {
+                this.onClick(function() {
+                    // TODO: Submit answer
+                });
+            }
+         })();
+
+        return {};
+    })($);
+</script>
 </body>
