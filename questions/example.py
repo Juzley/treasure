@@ -9,8 +9,8 @@ class ExampleQuestions(yapsy.IPlugin.IPlugin):
         return False
 
     # TODO: Better stuff than this - maybe register routes with the app?
-    def render(self):
-        return render_template('example.html')
+    def render(self, event_id):
+        return render_template('example.html', event_id=event_id)
 
 
 
