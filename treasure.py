@@ -6,6 +6,8 @@ from flask_security.utils import encrypt_password
 from peewee import CharField, TextField, ForeignKeyField, BooleanField,        \
     IntegerField
 from yapsy.PluginManager import PluginManager
+from yapsy.IPlugin import IPlugin
+import questions
 import random
 import string
 import json
@@ -101,7 +103,11 @@ def init_tables():
 # Plugins
 ################################################################################
 
-pluginManager = PluginManager(directories_list=['./questions'],
+import logging
+logging.basicConfig(level=logging.DEBUG)
+logging.getLogger('yapsy').setLevel(logging.DEBUG)
+pluginManager = PluginManager(categories_filter={"Default": questions.QuestionsPlugin},
+                              directories_list=['./questions'],
                               plugin_info_ext='plugin')
 pluginManager.collectPlugins()
 
@@ -240,7 +246,7 @@ def join_team(event, name):
             Team.event == event, Participant.user == current_user.id):
         p.delete()
 
-    team = Team.get(Team.event == event, Team.name == name)
+    team = Team.get(Team.event==event, Team.name==name)
     p = Participant(user=current_user.id, team=team.id)
     p.save()
 

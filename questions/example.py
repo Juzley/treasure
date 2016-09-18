@@ -1,7 +1,7 @@
 from flask import render_template
-import yapsy
+import questions
 
-class ExampleQuestions(yapsy.IPlugin.IPlugin):
+class ExampleQuestions(questions.QuestionsPlugin):
     def check_answer(self, question, answer):
         if question == 1 and answer == 'foo':
             return True

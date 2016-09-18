@@ -7,13 +7,13 @@
 
 <div class="question" id="1">
 Question 1: 
-<form><input type="text" class="answer"><input type="submit"></form>
+<form onSubmit="Example.onQuestionSubmit(1);"><input type="text" class="answer"><input type="submit"></form>
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
 <script>
     var Example = (function($) {
-        use strict;
+        "use strict";
 
         eventId = {{ event_id }};
 
@@ -44,19 +44,20 @@ Question 1:
             }
         };
 
+        onQuestionSubmit = function(question) {
+            // Find the answer
+            answer = $(question + '.question .answer').val();
+            submitAnswer(question, answer, function() { getAnswers(populateAnswers); });                
+        };
+
         (function init() {
             // Fill in any answers we already have.
             getAnswers(populateAnswers);
-
-            // Set up answer submission
-            $('#question :submit').each(function() {
-                this.onClick(function() {
-                    // TODO: Submit answer
-                });
-            }
          })();
 
-        return {};
+        return {
+            onQuestionSubmit: onQuestionSubmit
+        };
     })($);
 </script>
 </body>
