@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, request
 from flask_peewee.db import Database
 from flask_security import Security, PeeweeUserDatastore, UserMixin,           \
     RoleMixin, login_required, current_user
@@ -6,11 +6,11 @@ from flask_security.utils import encrypt_password
 from peewee import CharField, TextField, ForeignKeyField, BooleanField,        \
     IntegerField
 from yapsy.PluginManager import PluginManager
-from yapsy.IPlugin import IPlugin
 import questions
 import random
 import string
 import json
+import jinja2
 
 
 app = Flask(__name__)
@@ -27,6 +27,11 @@ app.config['DATABASE'] = {
     'name': 'treasure.db',
     'engine': 'peewee.SqliteDatabase'
 }
+
+template_loader = jinja2.ChoiceLoader([
+    app.jinja_loader,
+    jinja2.FileSystemLoader(['questions'])])
+app.jinja_loader = template_loader
 
 
 # Connect to the database
@@ -73,8 +78,8 @@ class Team(db.Model):
 class Answer(db.Model):
     team = ForeignKeyField(Team, related_name='answers')
     question = IntegerField()
-    answer = TextField()
-    correct = BooleanField()
+    answer = TextField(null=True)
+    correct = BooleanField(default=False)
     # TODO: key of team/question
 
 
@@ -103,9 +108,6 @@ def init_tables():
 # Plugins
 ################################################################################
 
-import logging
-logging.basicConfig(level=logging.DEBUG)
-logging.getLogger('yapsy').setLevel(logging.DEBUG)
 pluginManager = PluginManager(categories_filter={"Default": questions.QuestionsPlugin},
                               directories_list=['./questions'],
                               plugin_info_ext='plugin')
@@ -142,13 +144,13 @@ def event(event_id):
     # TODO: Check plugin exists
     questions = pluginManager.getPluginByName(event.questions)
 
-    return questions.render()
+    return questions.plugin_object.render(event_id)
 
 
-@app.route('/answer_question/<event_id>/<question>')
+@app.route('/answer_question/<event_id>/<question>', methods=['POST'])
 @login_required
 def answer_question(event_id, question):
-    answer = flask.request.get_json()
+    answer = request.get_json()
 
     # TODO: Check all this stuff exists
     event = Event.get(Event.id==event_id)
@@ -157,12 +159,15 @@ def answer_question(event_id, question):
     if event.active:
         team = get_team(event, current_user)
         questions = pluginManager.getPluginByName(event.questions)
-        correct = questions.check_answer(question, answer)
 
-        a = Answer.get_or_create(team=team, question=question)
+        a, _ = Answer.get_or_create(team=team,
+                                    question=question)
         a.answer = answer
-        a.correct = questions.check_answer(answer)
+        a.correct = questions.plugin_object.check_answer(question, answer)
         a.save()
+
+    # No data to return
+    return ('', 204)
 
 
 @app.route('/get_answers/<event_id>')
@@ -176,7 +181,7 @@ def get_answers(event_id):
 
     answers = {a.question: a.answer for a in
                Answer.select().where(Answer.team==team.id)}
-    return json.dumps(answer)
+    return json.dumps(answers)
 
 
 @app.route('/start_event/<event_id>')
@@ -262,4 +267,4 @@ def home():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(threaded=True)

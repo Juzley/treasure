@@ -7,7 +7,7 @@
 
 <div class="question" id="1">
 Question 1: 
-<form onSubmit="Example.onQuestionSubmit(1);"><input type="text" class="answer"><input type="submit"></form>
+<form><input type="text" class="answer"><input type="submit"></form>
 </div>
 
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
@@ -15,10 +15,10 @@ Question 1:
     var Example = (function($) {
         "use strict";
 
-        eventId = {{ event_id }};
+        var eventId = {{ event_id }};
 
         // TODO: Move some of these to common lib?
-        getAnswers = function(successCallback) {
+        var getAnswers = function(successCallback) {
             $.ajax({
                 url: '/get_answers/' + eventId,
                 type: 'GET',
@@ -27,37 +27,52 @@ Question 1:
             });
         };
 
-        submitAnswer = function(question, answer, successCallback) {
+        var submitAnswer = function(question, answer, successCallback) {
             $.ajax({
                 url: '/answer_question/' + eventId + "/" + question,
+                type: 'POST',
                 data: JSON.stringify(answer),
                 contentType: 'application/json; charset=utf-8',
                 success: successCallback
             });
         }
 
-        populateAnswers = function(answers) {
+        var populateAnswers = function(answers) {
             for (var question in answers) {
                 if (answers.hasOwnProperty(question)) {
-                    $('#' question '.question answer') .val(answers[question]);
+                    $('#' + question + '.question .answer') .val(answers[question]);
                 }
             }
         };
 
-        onQuestionSubmit = function(question) {
+        var onQuestionSubmit = function(question) {
             // Find the answer
-            answer = $(question + '.question .answer').val();
-            submitAnswer(question, answer, function() { getAnswers(populateAnswers); });                
+            var answer = $('#' +  question + '.question .answer').val();
+            submitAnswer(question, answer, function() {
+                /*getAnswers(populateAnswers);*/ });                
+
+            return 
+        };
+
+        var makeQuestionSubmitHandler = function(question) {
+            return function(ev) {
+                ev.preventDefault();
+                onQuestionSubmit(question);
+                return false;
+            };
         };
 
         (function init() {
             // Fill in any answers we already have.
             getAnswers(populateAnswers);
+
+            $('.question').each(function() {
+                $('form', this).submit(
+                    makeQuestionSubmitHandler($(this).attr('id')));
+            });
          })();
 
-        return {
-            onQuestionSubmit: onQuestionSubmit
-        };
+        return {};
     })($);
 </script>
 </body>
