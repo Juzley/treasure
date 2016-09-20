@@ -24,6 +24,9 @@ class UserRoles(db.Model):
 
 
 class Event(db.Model):
+    name = TextField()
+    description = TextField(null=True)
+    max_teams = IntegerField(default=0)
     questions = TextField()
     questions_version = TextField(null=True)
     active = BooleanField(default=False)

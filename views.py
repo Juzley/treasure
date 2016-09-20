@@ -13,10 +13,13 @@ from app import app
 def view_event(event_id):
     # TODO: Check event exists, check login vs not etc
     event = Event.get(Event.id == event_id)
-    # TODO: Check plugin exists
-    questions = questionsmanager.getPluginByName(event.questions)
 
-    return questions.plugin_object.render(event_id)
+    if event.active:
+        # TODO: Check plugin exists
+        questions = questionsmanager.getPluginByName(event.questions)
+        return questions.plugin_object.render(event_id)
+    else:
+        return render_template('event.html', event=event)
 
 
 @app.route('/answer_question/<event_id>/<question>', methods=['POST'])
