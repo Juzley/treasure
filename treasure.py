@@ -15,8 +15,10 @@ def init_tables():
 
     # Create a test user
     if not User.select(User.email == 'juzley@gmailcom').exists():
+        user_datastore.create_role(name='admin')
         user_datastore.create_user(email='juzley@gmail.com',
-                                   password=encrypt_password('password'))
+                                   password=encrypt_password('password'),
+                                   roles=['admin'])
 
 if __name__ == '__main__':
     app.run(threaded=True)

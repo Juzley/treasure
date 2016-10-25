@@ -40,6 +40,7 @@ class EventAdmin(db.Model):
 class Team(db.Model):
     name = TextField()
     event = ForeignKeyField(Event, related_name='teams')
+    admin = ForeignKeyField(User, related_name='admin_teams')
     # TODO: key of name/event
 
 
