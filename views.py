@@ -109,9 +109,9 @@ def create_event(questions):
         # TODO: some kind of error
         pass
 
-    event = Event.create(questions=questions)
     # TODO: Event name
-    EventAdmin.create(name='TestEvent', event=event, user=current_user.id)
+    event = Event.create(name='TestEvent', questions=questions)
+    EventAdmin.create(event=event, user=current_user.id)
 
     return redirect(url_for('home'))
 
