@@ -124,7 +124,7 @@ def create_team(event, name):
     import random
     import string
     name = ''.join(random.choice(string.ascii_lowercase) for _ in range(4))
-    Team.create(name=name, event=event)
+    Team.create(name=name, event=event, admin=current_user.id)
 
     return redirect(url_for('home'))
 
