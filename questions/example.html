@@ -40,7 +40,7 @@ Question 1:
         var populateAnswers = function(answers) {
             for (var question in answers) {
                 if (answers.hasOwnProperty(question)) {
-                    $('#' + question + '.question .answer') .val(answers[question]);
+                    $('#' + question + '.question .answer').val(answers[question]);
                 }
             }
         };
@@ -49,9 +49,7 @@ Question 1:
             // Find the answer
             var answer = $('#' +  question + '.question .answer').val();
             submitAnswer(question, answer, function() {
-                /*getAnswers(populateAnswers);*/ });                
-
-            return 
+                /*getAnswers(populateAnswers);*/ });
         };
 
         var makeQuestionSubmitHandler = function(question) {

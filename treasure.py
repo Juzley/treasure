@@ -5,6 +5,7 @@ from auth import user_datastore
 from model import User, Role, UserRoles, Event, EventAdmin, Team, Answer,      \
     Participant
 import views
+import api
 
 
 @app.before_first_request

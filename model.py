@@ -53,7 +53,7 @@ class Answer(db.Model):
 
 
 class Participant(db.Model):
-    user = ForeignKeyField(User, related_name='events')
+    user = ForeignKeyField(User, related_name='user')
     team = ForeignKeyField(Team, related_name='members')
 
 
