@@ -1,27 +1,69 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8"/>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
 </head>
 <body>
-    <h1>Questions</h1>
-    {%for q in questions %}
-        <a href="create_event/{{q}}">{{q}}</a>
-    {% endfor %}
+    <div id='activeEvents'>
+        <h2>Active Events</h2>
+        <ul></ul>
+    </div>
+    <div id='upcomingEvents'>
+        <h2>Upcoming Events</h2>
+        <ul></ul>
+    </div>
+    <div id='pastEvents'>
+        <h2>Past Events</h2>
+        <ul></ul>
+    </div>
 
-    <h1>Events</h1>
-    {%for e in events %}
-        {{e.questions}}:
-            <a href="create_team/{{e.id}}/@@@">Create Team</a>
-            <a href="start_event/{{e.id}}">Start Event</a>
-            <a href="end_event/{{e.id}}">End Event</a>
-        <h2>Teams</h2>
-        {%for t in e.teams %}
-            <a href="join_team/{{e.id}}/{{t.name}}">{{t.name}}</a>
-            {%for m in t.members %}
-                <p>{{m.user.email}}</p>
-            {% endfor %}
-        {% endfor %}
-    {% endfor %}
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    <script>
+        var Treasure = (function($) {
+            "use strict";
+
+            var populateEvents = function(divId, events) {
+                for (var i = 0; i <  events.length; i++) {
+                    var event = events[i];
+                    $(divId + ' ul').append('<li>' + event.name + '</li>');
+                }
+            };
+
+            (function init() {
+                $.ajax({
+                    url: '/active_events',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(events) {
+                        populateEvents('#activeEvents', events);
+                    }
+                });
+                $.ajax({
+                    url: '/upcoming_events',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(events) {
+                        populateEvents('#upcomingEvents', events);
+                    }
+                });
+                $.ajax({
+                    url: '/past_events',
+                    type: 'GET',
+                    dataType: 'json',
+                    success: function(events) {
+                        populateEvents('#pastEvents', events);
+                    }
+                });
+            })();
+
+            return {};
+        })($);
+    </script>
 </body>
 

@@ -18,12 +18,12 @@ Question 1:
         var eventId = {{ event_id }};
 
         // TODO: Move some of these to common lib?
-        var getAnswers = function(successCallback) {
+        var getAnswers = function() {
             $.ajax({
                 url: '/get_answers/' + eventId,
                 type: 'GET',
                 dataType: 'json',
-                success: successCallback
+                success: populateAnswers
             });
         };
 
@@ -49,7 +49,7 @@ Question 1:
             // Find the answer
             var answer = $('#' +  question + '.question .answer').val();
             submitAnswer(question, answer, function() {
-                /*getAnswers(populateAnswers);*/ });
+                getAnswers(); });
         };
 
         var makeQuestionSubmitHandler = function(question) {
@@ -62,7 +62,7 @@ Question 1:
 
         (function init() {
             // Fill in any answers we already have.
-            getAnswers(populateAnswers);
+            getAnswers();
 
             $('.question').each(function() {
                 $('form', this).submit(

@@ -30,6 +30,7 @@ class Event(db.Model):
     questions = TextField()
     questions_version = TextField(null=True)
     active = BooleanField(default=False)
+    finished = BooleanField(default=False)
 
 
 class EventAdmin(db.Model):

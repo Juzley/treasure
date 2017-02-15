@@ -74,6 +74,7 @@ def start_event(event_id):
             'Only event admins can start events', 403)
 
     event.active = True
+    event.finished = False
     event.save()
 
     return ('', 200)
@@ -95,9 +96,32 @@ def end_event(event_id):
             'Only event admins can end events', 403)
 
     event.active = False
+    event.finished = True
     event.save()
 
     return ('', 200)
+
+
+@app.route('/active_events')
+def active_events():
+    events = [{'name': e.name, 'id': e.id} for e in
+              Event.select().where(Event.active == True)]
+    return json.dumps(events)
+
+
+@app.route('/upcoming_events')
+def upcoming_events():
+    events = [{'name': e.name, 'id': e.id} for e in
+              Event.select().where(
+                  Event.active == False, Event.finished == False)]
+    return json.dumps(events)
+
+
+@app.route('/past_events')
+def past_events():
+    events = [{'name': e.name, 'id': e.id} for e in
+              Event.select().where(Event.finished == True)]
+    return json.dumps(events)
 
 
 @app.route('/create_team/<event_id>/<name>')
