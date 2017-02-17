@@ -101,6 +101,22 @@ def end_event(event_id):
 
     return ('', 200)
 
+@app.route('/get_event_info/<event_id>')
+def get_event_info(event_id):
+    event = Event.get(Event.id == event_id)
+    if not event:
+        raise EventNotFound(event_id)
+
+    teams = []
+    for t in Team.select().where(Team.event == event_id):
+        teams.append({'name': t.name})
+
+    data = { 'name': event.name,
+             'id': event.id,
+             'teams': teams }
+
+    return json.dumps(data)
+
 
 @app.route('/active_events')
 def active_events():
@@ -161,6 +177,7 @@ def join_team(event_id, name):
 @login_required
 def leave_team(event_id, name):
     # TODO: Can't do this while the event is active.
+    # TODO: Leaving a team deletes it?
     query = Participant.select().join(Team).where(
         Team.event == event_id, Participant.user == current_user.id)
     if not query.exists():
