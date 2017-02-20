@@ -109,7 +109,14 @@ def get_event_info(event_id):
 
     teams = []
     for t in Team.select().where(Team.event == event_id):
-        teams.append({'name': t.name})
+        members = []
+        for m in t.members:
+            # TODO: Name rather than email - need to set the name when creating
+            # users.
+            members.append({'name': m.user.email,
+                            'id': m.user.id})
+        teams.append({'name': t.name,
+                      'members': members})
 
     data = { 'name': event.name,
              'id': event.id,
@@ -177,7 +184,7 @@ def join_team(event_id, name):
 @login_required
 def leave_team(event_id, name):
     # TODO: Can't do this while the event is active.
-    # TODO: Leaving a team deletes it?
+    # TODO: Leaving a team deletes it if empty?
     query = Participant.select().join(Team).where(
         Team.event == event_id, Participant.user == current_user.id)
     if not query.exists():

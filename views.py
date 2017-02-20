@@ -36,4 +36,4 @@ def view_event(event_id):
 @login_required
 def home():
     questions = [p.name for p in questionsmanager.getAllPlugins()]
-    return render_template('index.html')
+    return render_template('index.html', current_user=current_user)

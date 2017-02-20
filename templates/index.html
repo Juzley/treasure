@@ -35,6 +35,8 @@
         var Treasure = (function($) {
             "use strict";
 
+            var currentUserId = {{ current_user.id }};
+
             var populateEvents = function(divId, events, clickHandler) {
                 var makeClickHandler = function(eventId) {
                     return function() {
@@ -73,13 +75,73 @@
             // Populates the upcoming event page with the event information
             // from the server.
             var populateUpcomingEvent = function(eventInfo) {
+                var makeJoinHandler = function(teamName) {
+                    return function() {
+                        joinTeam(eventInfo.id, teamName);
+                    };
+                };
+
+                var makeLeaveHandler = function(teamName) {
+                    return function() {
+                        leaveTeam(eventInfo.id, teamName);
+                    };
+                };
+
                 $('#upcomingEvent #eventName').text(eventInfo.name);
                 $('#upcomingEvent #createTeam').click(
                     function() { createTeam(eventInfo.id) });
+
+                // Display the teams registered for the event.
                 for (var i = 0; i < eventInfo.teams.length; i++) {
+                    var team = eventInfo.teams[i];
+                    var currentUserInTeam = false;
+
+                    // Display the team's members.
+                    var $memberList = $('<ul>');
+                    for (var j = 0; j < team.members.lenth; j++) {
+                        var member = team.members[j];
+                        $memberList.append(
+                            $('<li>').text(member.name));
+
+                        if (currentUserId === member.id) {
+                            currentUserInTeam = true;
+                        }
+                    }
+
+                    // If the user is already in this team, display a
+                    // 'leave team' button instead of a 'join team' button.
+                    var $joinOrLeave = $('<a>')
+                    if (currentUserInTeam) {
+                        $joinOrLeave.text('Leave Team')
+                            .click(makeLeaveHandler(team.name));
+                    } else {
+                        $joinOrLeave.text('Join Team')
+                            .click(makeJoinHandler(team.name));
+                    }
+
                     $('#upcomingEvent #teams').append(
-                        $('<li>').text(eventInfo.teams[i].name));
+                        $('<li>').text(team.name)
+                            .append($joinOrLeave)
+                            .append($memberList));
                 }
+            };
+
+            // Send a 'join team' request to the server.
+            var joinTeam = function(eventId, teamName) {
+                $.ajax({
+                    url: 'join_team/' + eventId + '/' + teamName,
+                    type: 'GET',
+                    dataType: 'json'
+                });
+            };
+
+            // Send a 'leave team' request to the server.
+            var leaveTeam = function(eventId, teamName) {
+                $.ajax({
+                    url: 'leave_team/' + eventId + '/' + teamName,
+                    type: 'GET',
+                    dataType: 'json'
+                });
             };
 
             // Send a 'create team' request to the server.
@@ -88,7 +150,7 @@
                 $.ajax({
                     url: 'create_team/' + eventId + '/' + name,
                     type: 'GET',
-                    dataType: 'text',
+                    dataType: 'json',
                     success: function() {
                         $('#upcomingEvent #teams').append(
                             $('<li>').text(name));
