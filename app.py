@@ -1,9 +1,12 @@
 import flask
 import flask_peewee.db
 import jinja2
+from flask_api import FlaskAPI
 
 
-app = flask.Flask(__name__)
+app = FlaskAPI(__name__)
+
+# TODO: Move this to config.py
 app.config['DEBUG'] = True
 app.config['SECRET_KEY'] = 'secret'
 app.config['SECURITY_REGISTERABLE'] = True

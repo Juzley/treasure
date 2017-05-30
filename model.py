@@ -67,3 +67,7 @@ def get_team(event, user):
     # Use 'first' here - there should only be one result
     return Team.select().join(Participant).where(Participant.user == user.id,
                                                  Team.event == event).first()
+
+for model in (User, Role, UserRoles, Event, EventAdmin, Team,
+              Answer, Participant):
+    model.create_table(fail_silently=True)
